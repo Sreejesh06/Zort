@@ -1,0 +1,55 @@
+# Project-wide gitignore
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Upload directories (optional - keep test files)
+uploads/
+!uploads/.gitkeep
+
+# Test files
+test_*.py
+*_test.py
+test_files/
+
+# Documentation build
+docs/_build/
+
+# Backup files
+*.bak
+*.backup
+/node_modules

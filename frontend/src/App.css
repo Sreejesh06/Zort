@@ -1,0 +1,365 @@
+.dashboard {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  color: #1e40af;
+  margin-bottom: 32px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Upload Form Styles */
+.upload-form {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 32px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.upload-form div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upload-form label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.upload-form input[type="file"] {
+  padding: 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.3s ease;
+}
+
+.upload-form input[type="file"]:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.upload-form button {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.upload-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.upload-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Results Section */
+.results-section {
+  margin-top: 32px;
+  animation: fadeIn 0.6s ease-in;
+}
+
+.results-section h2 {
+  color: #1f2937;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.result-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.result-card h3 {
+  color: #1f2937;
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+}
+
+.score-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.score-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.score-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.score-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.score-value.excellent {
+  color: #059669;
+}
+
+.score-value.good {
+  color: #d97706;
+}
+
+.score-value.poor {
+  color: #dc2626;
+}
+
+.verdict {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.verdict.excellent-match {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.verdict.good-match {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.verdict.moderate-match {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.verdict.poor-match {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.verdict.no-match {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.feedback-section {
+  margin-top: 20px;
+}
+
+.feedback-section h4 {
+  color: #1f2937;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.feedback-text {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #10b981;
+  line-height: 1.6;
+}
+
+.feedback-text div {
+  margin-bottom: 8px;
+}
+
+.feedback-text div:last-child {
+  margin-bottom: 0;
+}
+
+/* AI Feedback Section */
+.ai-feedback-section {
+  margin-top: 32px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.6s ease-in;
+}
+
+.ai-feedback-section h2 {
+  color: #1f2937;
+  margin-bottom: 12px;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.ai-feedback-section p {
+  color: #6b7280;
+  margin-bottom: 24px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.feedback-form {
+  margin-bottom: 24px;
+}
+
+.question-input {
+  margin-bottom: 16px;
+}
+
+.question-input label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.question-input textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.question-input textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.feedback-form button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.feedback-form button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.feedback-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* AI Response */
+.ai-response {
+  background: #f0f9ff;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #0ea5e9;
+  animation: fadeIn 0.6s ease-in;
+}
+
+.ai-response h3 {
+  color: #0c4a6e;
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+}
+
+.question-asked {
+  background: #e0f2fe;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #0c4a6e;
+}
+
+.ai-answer {
+  color: #1e293b;
+}
+
+.answer-text {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Loader */
+.loader {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.1rem;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard {
+    margin: 10px;
+    padding: 16px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  .upload-form {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .score-display {
+    grid-template-columns: 1fr;
+  }
+  
+  .question-input textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}

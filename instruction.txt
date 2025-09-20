@@ -1,0 +1,158 @@
+# PROJECT: Zort
+# MISSION: Build a sleek, responsive AI platform that intelligently scores resume-JD relevance, provides actionable career feedback, and empowers placement teams with data-driven insights.
+# HACKATHON GOAL: A deployed, fast, and modern web app with a polished UI and at least one unique "wow" feature.
+
+# ======================================================================
+# I. GUIDING PRINCIPLES (The Zort Manifesto)
+# ======================================================================
+# 1.  **MVP FIRST, FANCY LATER:** The absolute priority is a working end-to-end flow. A user must be able to upload a resume and JD and see a score. Everything else builds on this.
+# 2.  **COMMUNICATE CONSTANTLY:** Use a dedicated chat. Announce what you're working on (`"I'm starting the ResultsTable component now"`). If you're stuck for more than 30 minutes, ask for help.
+# 3.  **USE GIT RELIGIOUSLY:** The `main` branch is for stable, working code only. All work happens on feature branches (e.g., `feature/jd-upload-api`). Merge to `main` via Pull Requests.
+# 4.  **FAKE IT 'TIL YOU MAKE IT:** The frontend should be built using a mock JSON data file until the real API is ready. This allows for parallel, unblocked development.
+# 5.  **MAINTAIN A CLEAN WORKSPACE:** A clean project is a stable project. Use the `.gitignore` file from day one and stick to the agreed-upon folder structure. This prevents "workspace collapse."
+# 6.  **STICK TO THE PLAN:** This document is our source of truth. Do not add new libraries or features without discussing with the team first.
+
+# ======================================================================
+# II. ROLES & RESPONSIBILITIES ("The Zort Agents")
+# ======================================================================
+# - **Backend Lead:** Architects and builds the FastAPI server, database schema, and API endpoints. Manages backend deployment and ensures API contract is met.
+# - **Frontend Lead:** Architects and builds the React application. Manages component structure, state, routing, UI/UX, and handles frontend deployment.
+# - **AI/ML Lead:** Designs and implements the core analysis engine. Owns the LangChain orchestration, prompt engineering, and the scoring algorithm's logic.
+
+# ======================================================================
+# III. CORE TECH STACK (The Zort Toolbox)
+# ======================================================================
+# - **Language:** Python 3.10+ (Backend), TypeScript (Frontend)
+# - **Backend:** FastAPI
+# - **Frontend:** React (with Vite)
+#   - **UI Components:** shadcn/ui or Material-UI (for speed and polish)
+#   - **Data Fetching:** Axios
+#   - **Routing:** React Router
+#   - **State Management:** Zustand (lightweight and powerful)
+# - **Database:** PostgreSQL (on a free provider like Supabase or Neon)
+# - **AI/LLM Stack:** LangChain, Google Gemini API, ChromaDB
+# - **Dev Tools:** Prettier (for code formatting), ESLint (for code quality)
+
+# ======================================================================
+# IV. THE ACTION PLAN (Phase-Based To-Do List)
+# ======================================================================
+
+### PHASE 0: SETUP & FOUNDATION (First 2-3 Hours)
+- [ ] **ALL:** Create GitHub repository.
+- [ ] **ALL:** Agree on the API Contract (see Section VI).
+- [ ] **ALL:** Create and commit the `.gitignore` file immediately (see Section V for the template). This is your #1 defense against workspace issues.
+- [ ] **Backend Lead:** Set up the basic FastAPI server with a `/health` endpoint and CORS enabled.
+- [ ] **Frontend Lead:** Initialize the React project with Vite (`npm create vite@latest my-app -- --template react-ts`).
+- [ ] **Frontend Lead:** Install core dependencies (`axios`, `react-router-dom`, `zustand`, UI library).
+- [ ] **Frontend Lead:** Set up basic folder structure (`src/pages`, `src/components`, `src/services`, `src/store`).
+- [ ] **Frontend Lead:** Set up basic routing and confirm a successful API call to the backend's `/health` endpoint.
+
+### PHASE 1: CORE FUNCTIONALITY - THE MVP (Next 8-10 Hours)
+#### Backend Tasks
+- [ ] **DB:** Finalize and create the database schema on the cloud provider.
+- [ ] **API:** Implement file upload endpoints (`POST /jobs`, `POST /resumes`).
+- [ ] **AI Core:** Implement the basic scoring logic (Hard + Soft match).
+- [ ] **API:** Implement the results endpoint (`GET /jobs/{job_id}/results`) that returns mock data first, then real scores.
+
+#### Frontend Tasks (React)
+- [ ] **Data:** Create a `mockData.json` file to develop the UI without waiting for the API.
+- [ ] **Component:** Create a reusable `FileUpload.jsx` component.
+- [ ] **Page:** Build the `DashboardPage.jsx` to list jobs and contain the `FileUpload` component.
+- [ ] **Service:** Create an `apiService.ts` file to centralize all Axios calls.
+- [ ] **Page:** Build the `ResultsPage.jsx` which fetches and displays data for a specific job ID.
+- [ ] **Component:** Build the `ResultsTable.jsx` component using a table from your UI library.
+- [ ] **State:** Create a Zustand store to manage global state like the list of jobs and user info.
+
+### PHASE 2: ENHANCEMENTS & "WOW" FEATURES (Next 8-10 Hours)
+#### Backend Tasks
+- [ ] **AI Core:** Integrate the Gemini LLM via LangChain to generate rich feedback.
+- [ ] **API:** Update the results endpoint to return the full, rich JSON object (the "AI Career Coach" data).
+- [ ] **API:** Build the `/analytics/talent-pool` endpoint.
+
+#### Frontend Tasks (React)
+- [ ] **Component:** Create a `CandidateDetailModal.jsx` to display the detailed LLM feedback in a clean, professional layout.
+- [ ] **Component:** Build the `AnalyticsDashboard.jsx`. Use a library like **Recharts** to create a bar chart for "Top 5 Missing Skills."
+- [ ] **UI/UX:** Add loading spinners for API calls and toast notifications for success/error messages.
+
+### PHASE 3: POLISH, DEPLOY & DEMO PREP (Final 4-6 Hours)
+- [ ] **ALL:** Perform final end-to-end integration testing.
+- [ ] **Frontend Lead:** Ensure the application is responsive and visually polished.
+- [ ] **Backend Lead:** Add robust error handling to all API endpoints.
+- [ ] **Deployment:**
+    - **Backend:** Deploy the FastAPI server on **Render** or **Hugging Face Spaces**.
+    - **Frontend:** Deploy the React app on **Vercel** or **Netlify**.
+- [ ] **ALL:** Create a high-quality `README.md` file for the GitHub repository.
+- [ ] **ALL:** Prepare and rehearse a compelling 3-minute demo script.
+
+# ======================================================================
+# V. CRITICAL WORKSPACE & FILE MANAGEMENT
+# ======================================================================
+# To prevent issues, understand what's critical and what's disposable.
+
+### 🛑 **DO NOT DELETE (The Core of Zort)**
+* **`src/`:** Contains all your source code. Deleting this is like deleting the engine from a car.
+* **`public/` (Frontend):** Your main HTML file lives here.
+* **`package.json` / `requirements.txt`:** The blueprints for your project's dependencies.
+* **`.git/` (Hidden):** The entire history of your project. **Never touch this folder.**
+
+### ✅ **SAFE TO DELETE (The Scaffolding)**
+These files are generated or temporary. They can be safely deleted to save space or fix bugs.
+* **`node_modules/`:** A huge folder of downloaded libraries. Recreate with `npm install`.
+* **`dist/` or `build/`:** The compiled version of your app. Recreate with `npm run build`.
+* **`.venv/`:** Your Python virtual environment. Recreate and reinstall with `pip install -r requirements.txt`.
+* **`__pycache__/`:** Temporary Python cache files. They are created automatically.
+
+### The `.gitignore` Rule: Your #1 Defense
+Create a file named `.gitignore` in your project root immediately. This is the **most critical move** to keep your workspace clean and prevent committing huge, unnecessary files to GitHub.
+
+```gitignore
+# IDE & OS files
+.DS_Store
+.idea/
+.vscode/
+
+# Environment variables
+.env
+.env*.local
+
+# Python / FastAPI Backend
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# JavaScript / React Frontend
+node_modules/
+dist/
+build/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+======================================================================
+VI. API CONTRACT (The Frontend-Backend Handshake)
+======================================================================
+A clear contract prevents integration headaches.
+Example Response for GET /jobs/{job_id}/results:
+```json
+[
+{
+"application_id": 101,
+"candidate_name": "Priya Sharma",
+"relevance_score": 88,
+"verdict": "High",
+"match_summary": "Excellent alignment on technical skills like Python and cloud services.",
+"missing_elements": [
+{"skill": "AWS SageMaker", "importance": "High"},
+{"skill": "Agile Methodology", "importance": "Medium"}
+],
+"improvement_feedback": {
+"title": "Your AI Career Coach Feedback ✨",
+"suggestions": [
+"Your resume is strong, but could be tailored better for this role by highlighting your experience with cloud platforms. Consider adding a small project deploying a model on AWS.",
+"To bridge the gap in Agile Methodology, you could take a short online course and add the certification to your resume."
+]
+}
+}
+]
+```

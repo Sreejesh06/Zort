@@ -1,6 +1,8 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from database import get_db, Resume, JobDescription, Analysis, UserFeedback, init_database
 import pdfplumber
 import docx
 import docx2txt
@@ -17,6 +19,7 @@ import pytesseract
 from PIL import Image
 import google.generativeai as genai
 from dotenv import load_dotenv
+from graph_generator import graph_generator
 
 # Load environment variables (optional)
 try:
@@ -26,6 +29,13 @@ except Exception as e:
 
 # Initialize FastAPI app
 app = FastAPI(title="Resume Analysis API", version="1.0.0")
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on application startup"""
+    print("🚀 Starting Resume Analysis API...")
+    init_database()
 
 # Configure Gemini API with environment variable
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBZhaS_ylNb7cdbYjkD1S9hxN9vDXJvIdo")
@@ -147,6 +157,19 @@ async def analyze_resume_vs_jd(resume: UploadFile = File(...), jd: UploadFile = 
         # Generate enhanced feedback
         feedback = generate_enhanced_feedback(context_analysis, final_score, resume_text, jd_text)
         
+        # Generate professional graphs
+        graph_data = {
+            "score": final_score,
+            "keyword_score": context_analysis['breakdown']['basic_keyword_score'],
+            "semantic_score": semantic_score
+        }
+        
+        try:
+            charts = graph_generator.create_professional_dashboard(graph_data)
+        except Exception as e:
+            print(f"Graph generation error: {e}")
+            charts = {}
+
         return {
             "resume": resume.filename,
             "jd": jd.filename,
@@ -168,8 +191,29 @@ async def analyze_resume_vs_jd(resume: UploadFile = File(...), jd: UploadFile = 
             "resume_sections": resume_sections,
             "jd_info": jd_info,
             "resume_text": resume_text,
-            "jd_text": jd_text
+            "jd_text": jd_text,
+            "charts": charts
         }
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.post("/generate-charts/")
+async def generate_charts(
+    score: float = Form(...),
+    keyword_score: float = Form(...),
+    semantic_score: float = Form(...)
+):
+    """Generate professional charts for analysis data"""
+    try:
+        graph_data = {
+            "score": score,
+            "keyword_score": keyword_score,
+            "semantic_score": semantic_score
+        }
+        
+        charts = graph_generator.create_professional_dashboard(graph_data)
+        return {"charts": charts}
+        
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -212,23 +256,186 @@ Keep your response concise but helpful (2-3 paragraphs max).
         
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
+# Database CRUD Endpoints
+
+@app.get("/resumes/")
+async def get_resumes(db: Session = Depends(get_db)):
+    """Get all resumes from database"""
     try:
-        file_location = os.path.join(UPLOAD_DIR, file.filename)
-        with open(file_location, "wb") as f:
-            f.write(await file.read())
-        
-        # Parse file
-        if file_type.lower() == "pdf":
-            text = extract_text_from_pdf(file_location)
-        elif file_type.lower() == "docx":
-            text = extract_text_from_docx(file_location)
-        else:
-            return JSONResponse({"error": "Unsupported file type"}, status_code=400)
-        
-        jd_info = extract_jd_info(text)
-        return {"filename": file.filename, "raw_text": text, "jd_info": jd_info}
+        resumes = db.query(Resume).all()
+        return {
+            "resumes": [
+                {
+                    "id": resume.id,
+                    "filename": resume.filename,
+                    "name": resume.name,
+                    "email": resume.email,
+                    "phone": resume.phone,
+                    "skills": resume.skills,
+                    "experience_years": resume.experience_years,
+                    "uploaded_at": resume.uploaded_at,
+                    "file_type": resume.file_type
+                }
+                for resume in resumes
+            ],
+            "total": len(resumes)
+        }
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/job-descriptions/")
+async def get_job_descriptions(db: Session = Depends(get_db)):
+    """Get all job descriptions from database"""
+    try:
+        jds = db.query(JobDescription).all()
+        return {
+            "job_descriptions": [
+                {
+                    "id": jd.id,
+                    "title": jd.title,
+                    "company": jd.company,
+                    "required_skills": jd.required_skills,
+                    "experience_required": jd.experience_required,
+                    "location": jd.location,
+                    "salary_range": jd.salary_range,
+                    "uploaded_at": jd.uploaded_at
+                }
+                for jd in jds
+            ],
+            "total": len(jds)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/analyses/")
+async def get_analyses(db: Session = Depends(get_db)):
+    """Get all analyses from database"""
+    try:
+        analyses = db.query(Analysis).all()
+        return {
+            "analyses": [
+                {
+                    "id": analysis.id,
+                    "resume_id": analysis.resume_id,
+                    "job_description_id": analysis.job_description_id,
+                    "overall_score": analysis.overall_score,
+                    "keyword_score": analysis.keyword_score,
+                    "semantic_score": analysis.semantic_score,
+                    "context_aware_score": analysis.context_aware_score,
+                    "matched_skills": analysis.matched_skills,
+                    "missing_skills": analysis.missing_skills,
+                    "ai_feedback": analysis.ai_feedback,
+                    "created_at": analysis.created_at
+                }
+                for analysis in analyses
+            ],
+            "total": len(analyses)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/analyses/{analysis_id}")
+async def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
+    """Get specific analysis by ID"""
+    try:
+        analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+        if not analysis:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+        
+        return {
+            "id": analysis.id,
+            "resume_id": analysis.resume_id,
+            "job_description_id": analysis.job_description_id,
+            "overall_score": analysis.overall_score,
+            "keyword_score": analysis.keyword_score,
+            "semantic_score": analysis.semantic_score,
+            "context_aware_score": analysis.context_aware_score,
+            "matched_skills": analysis.matched_skills,
+            "missing_skills": analysis.missing_skills,
+            "skill_scores": analysis.skill_scores,
+            "ai_feedback": analysis.ai_feedback,
+            "recommendations": analysis.recommendations,
+            "created_at": analysis.created_at,
+            "analysis_duration": analysis.analysis_duration
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/save-analysis/")
+async def save_analysis(
+    resume_id: int = Form(...),
+    job_description_id: int = Form(...),
+    overall_score: float = Form(...),
+    keyword_score: float = Form(...),
+    semantic_score: float = Form(...),
+    context_aware_score: float = Form(...),
+    matched_skills: str = Form(...),  # JSON string
+    missing_skills: str = Form(...),  # JSON string
+    ai_feedback: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Save analysis results to database"""
+    try:
+        import json
+        
+        # Parse JSON strings
+        matched_skills_data = json.loads(matched_skills) if matched_skills else {}
+        missing_skills_data = json.loads(missing_skills) if missing_skills else {}
+        
+        # Create new analysis record
+        analysis = Analysis(
+            resume_id=resume_id,
+            job_description_id=job_description_id,
+            overall_score=overall_score,
+            keyword_score=keyword_score,
+            semantic_score=semantic_score,
+            context_aware_score=context_aware_score,
+            matched_skills=matched_skills_data,
+            missing_skills=missing_skills_data,
+            ai_feedback=ai_feedback
+        )
+        
+        db.add(analysis)
+        db.commit()
+        db.refresh(analysis)
+        
+        return {
+            "message": "Analysis saved successfully",
+            "analysis_id": analysis.id,
+            "overall_score": analysis.overall_score
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/database-status/")
+async def database_status(db: Session = Depends(get_db)):
+    """Check database status and statistics"""
+    try:
+        # Get counts
+        resume_count = db.query(Resume).count()
+        jd_count = db.query(JobDescription).count()
+        analysis_count = db.query(Analysis).count()
+        feedback_count = db.query(UserFeedback).count()
+        
+        return {
+            "status": "healthy",
+            "database_type": "PostgreSQL" if "postgresql" in str(db.bind.url) else "SQLite",
+            "statistics": {
+                "resumes": resume_count,
+                "job_descriptions": jd_count,
+                "analyses": analysis_count,
+                "user_feedback": feedback_count
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 
 def extract_text_from_pdf(path):
     """Enhanced PDF text extraction with OCR fallback"""
@@ -758,35 +965,35 @@ def generate_enhanced_feedback(context_analysis: Dict, final_score: int, resume_
     breakdown = context_analysis['breakdown']
     
     if final_score >= 85:
-        feedback.append("🎉 Excellent match! Your skills and experience align very well with this role.")
+        feedback.append("Excellent match! Your skills and experience align very well with this role.")
     elif final_score >= 75:
-        feedback.append("✅ Strong match! You have most required skills and good transferable experience.")
+        feedback.append("Strong match! You have most required skills and good transferable experience.")
     elif final_score >= 65:
-        feedback.append("👍 Good match! You have solid foundational skills with room for growth.")
+        feedback.append("Good match! You have solid foundational skills with room for growth.")
     elif final_score >= 55:
-        feedback.append("⚠️ Moderate match. Consider highlighting transferable skills and relevant projects.")
+        feedback.append("Moderate match. Consider highlighting transferable skills and relevant projects.")
     elif final_score >= 45:
-        feedback.append("📋 Fair match. Focus on transferable skills and project relevance.")
+        feedback.append("Fair match. Focus on transferable skills and project relevance.")
     else:
-        feedback.append("🔍 Limited match. Consider if this role aligns with your career goals.")
+        feedback.append("Limited match. Consider if this role aligns with your career goals.")
     
     # Address the limitations mentioned
-    feedback.append("\n🧠 Intelligent Analysis (Beyond Basic Keywords):")
+    feedback.append("\nIntelligent Analysis (Beyond Basic Keywords):")
     
     # Transferable skills insights
     if context_analysis['transferable_insights']:
-        feedback.append("💡 Transferable Skills:")
+        feedback.append("Transferable Skills:")
         for insight in context_analysis['transferable_insights']:
             feedback.append(f"  • {insight}")
     
     # Project context insights
     if context_analysis['project_insights']:
-        feedback.append("🏗️ Project Experience:")
+        feedback.append("Project Experience:")
         for insight in context_analysis['project_insights']:
             feedback.append(f"  • {insight}")
     
     # Score breakdown explanation
-    feedback.append(f"\n📊 Scoring Breakdown:")
+    feedback.append(f"\nScoring Breakdown:")
     feedback.append(f"  • Basic Keywords: {breakdown['basic_keyword_score']:.1f}% (traditional ATS matching)")
     feedback.append(f"  • Smart Synonyms: {breakdown['synonym_match_score']:.1f}% (Excel ↔ PowerBI recognition)")
     feedback.append(f"  • Transferable Skills: {breakdown['transferable_skills_score']:.1f}% (AI/ML → Analytics)")
@@ -794,7 +1001,7 @@ def generate_enhanced_feedback(context_analysis: Dict, final_score: int, resume_
     feedback.append(f"  • Contextual Understanding: {breakdown['contextual_understanding_score']:.1f}% (AI analysis)")
     
     # Specific recommendations
-    feedback.append(f"\n🎯 Recommendations:")
+    feedback.append(f"\nRecommendations:")
     
     if breakdown['synonym_match_score'] < 70:
         feedback.append("  • Highlight equivalent tools (e.g., if JD mentions Excel, mention your PowerBI experience)")
@@ -809,7 +1016,7 @@ def generate_enhanced_feedback(context_analysis: Dict, final_score: int, resume_
         feedback.append("  • Consider how your background brings unique value to this role")
     
     # Final note about recruiter perspective
-    feedback.append(f"\n💼 Recruiter Perspective:")
+    feedback.append(f"\nRecruiter Perspective:")
     feedback.append("  • This analysis considers context, not just keywords")
     feedback.append("  • Transferable skills and project relevance matter more than exact matches")
     feedback.append("  • Your potential and adaptability are key factors")
@@ -877,21 +1084,21 @@ Each value should be an array of strings.
                 feedback_data = json.loads(json_str)
                 
                 feedback = []
-                feedback.append(f"🤖 AI Career Coach Assessment:")
+                feedback.append(f"AI Career Coach Assessment:")
                 feedback.append(feedback_data.get('overall_assessment', [''])[0])
                 
                 if feedback_data.get('missing_skills'):
-                    feedback.append("📋 Skills to Add:")
+                    feedback.append("Skills to Add:")
                     for skill in feedback_data['missing_skills'][:3]:
                         feedback.append(f"  • {skill}")
                 
                 if feedback_data.get('recommendations'):
-                    feedback.append("💡 Recommendations:")
+                    feedback.append("Recommendations:")
                     for rec in feedback_data['recommendations'][:3]:
                         feedback.append(f"  • {rec}")
                 
                 if feedback_data.get('career_advice'):
-                    feedback.append("🎯 Career Advice:")
+                    feedback.append("Career Advice:")
                     for advice in feedback_data['career_advice'][:2]:
                         feedback.append(f"  • {advice}")
                 
@@ -901,7 +1108,7 @@ Each value should be an array of strings.
         
         # Fallback: parse as plain text
         lines = feedback_text.split('\n')
-        feedback = ["🤖 AI Career Coach Assessment:"]
+        feedback = ["AI Career Coach Assessment:"]
         for line in lines:
             line = line.strip()
             if line and len(line) > 10:  # Filter out very short lines
@@ -920,32 +1127,32 @@ def generate_detailed_feedback(resume_skills: Dict[str, List[str]], jd_skills: D
     
     # Overall assessment
     if final_score >= 85:
-        feedback.append("🎉 Excellent match! Your skills align very well with the job requirements.")
+        feedback.append("Excellent match! Your skills align very well with the job requirements.")
     elif final_score >= 70:
-        feedback.append("✅ Good match! You have most of the required skills.")
+        feedback.append("Good match! You have most of the required skills.")
     elif final_score >= 55:
-        feedback.append("⚠️ Moderate match. Consider improving some key areas.")
+        feedback.append("Moderate match. Consider improving some key areas.")
     elif final_score >= 40:
-        feedback.append("❌ Poor match. Significant skill gaps need to be addressed.")
+        feedback.append("Poor match. Significant skill gaps need to be addressed.")
     else:
-        feedback.append("🚫 Very poor match. Consider if this role is suitable.")
+        feedback.append("Very poor match. Consider if this role is suitable.")
     
     # Category-specific feedback
     for category, score in keyword_analysis['category_scores'].items():
         if score < 50 and keyword_analysis['missing_skills'][category]:
             missing = keyword_analysis['missing_skills'][category]
             category_name = category.replace('_', ' ').title()
-            feedback.append(f"📋 {category_name}: Missing {', '.join(missing[:3])}{'...' if len(missing) > 3 else ''}")
+            feedback.append(f"{category_name}: Missing {', '.join(missing[:3])}{'...' if len(missing) > 3 else ''}")
     
     # Positive feedback for matched skills
     total_matched = sum(len(skills) for skills in keyword_analysis['matched_skills'].values())
     if total_matched > 0:
-        feedback.append(f"✨ You have {total_matched} matching skills across different categories.")
+        feedback.append(f"You have {total_matched} matching skills across different categories.")
     
     # Specific recommendations
     if keyword_analysis['total_required'] > 0:
         match_percentage = (keyword_analysis['total_matches'] / keyword_analysis['total_required']) * 100
-        feedback.append(f"📊 Skill match rate: {match_percentage:.1f}% ({keyword_analysis['total_matches']}/{keyword_analysis['total_required']})")
+        feedback.append(f"Skill match rate: {match_percentage:.1f}% ({keyword_analysis['total_matches']}/{keyword_analysis['total_required']})")
     
     # Actionable suggestions
     suggestions = []
@@ -955,7 +1162,7 @@ def generate_detailed_feedback(resume_skills: Dict[str, List[str]], jd_skills: D
             suggestions.append(f"• Consider learning {missing[0]} for {category_name}")
     
     if suggestions:
-        feedback.append("💡 Recommendations:")
+        feedback.append("Recommendations:")
         feedback.extend(suggestions[:3])  # Limit to top 3 suggestions
     
     return feedback
